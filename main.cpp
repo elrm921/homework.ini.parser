@@ -18,7 +18,8 @@ public:
     {
         vector<vdata>::iterator current_section;
         ifstream source_data(src);
-        while (!source_data.eof())
+        if (!source_data.is_open()) throw logic_error("No such file " + src);
+        while (source_data.is_open() && !source_data.eof())
         {
             string line;
             getline(source_data, line);
@@ -28,6 +29,7 @@ public:
             regex re_section("\\[\\w+\\]", regex::ECMAScript|regex::icase);
             if (regex_search(line, re_section))
             {
+                line = line.substr(1,line.size()-2);
                 if (find_data_section(m_data, line) == m_data.end())
                 {
                     vdata section;
@@ -61,8 +63,10 @@ public:
         string section = str.substr(0,split);
         string skey = str.substr(split+1);
         auto it1 = find_data_section(m_data,section);
+        if (it1 == m_data.end()) throw logic_error("Section " + section + " does not exist");
         vector<kvalue> keys = it1->second;
         auto it2 = find_section_key(keys,skey);
+        if (it2 == keys.end()) throw logic_error("Key " + skey + " does not exist");
         T res = it2->second;
         return res;
     }
@@ -106,8 +110,15 @@ public:
 
 int main()
 {
-    ini_parser parser("example.ini");
-    // parser.print_data();
-    auto value = parser.get_value<string>("[Section1].var1");
-    cout << "get_value::section1::var1 " << value << endl;
+    try
+    {
+        ini_parser parser("example.ini");
+        // parser.print_data();
+        auto value = parser.get_value<string>("Section1.var1");
+        cout << "get_value::section1::var1 " << value << endl;
+    }
+    catch(const logic_error& e)
+    {
+        std::cerr << e.what() << endl;
+    }
 }
