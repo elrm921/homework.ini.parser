@@ -56,10 +56,15 @@ public:
                     type = value_type::floting;
                     dvalue = stod(svalue);
                 }
-                else if (regex_search(svalue, regex("^\\d+", regex::ECMAScript)))
+                else if (regex_search(svalue, regex("^[0-9]+$", regex::ECMAScript)))
                 {
                     type = value_type::integer;
                     ivalue = stoi(svalue);
+                }
+                else if (regex_search(svalue, regex("^True$|^False$", regex::ECMAScript)))
+                {
+                    type = value_type::boolean;
+                    bvalue = (svalue[0] == 'T' ? true : false);
                 }
                 else if (regex_search(svalue, regex("[A-zА-я]+", regex::ECMAScript)))
                 {
@@ -76,6 +81,7 @@ public:
                     kvalue this_pair;
                     this_pair.first = key;
                     this_pair.second = monostate();
+                    if (type == value_type::boolean) this_pair.second = bvalue;
                     if (type == value_type::integer) this_pair.second = ivalue;
                     if (type == value_type::floting) this_pair.second = dvalue;
                     if (type == value_type::string) this_pair.second = svalue;
@@ -83,6 +89,7 @@ public:
                 }
                 else
                 {
+                    if (type == value_type::boolean) it->second = bvalue;
                     if (type == value_type::integer) it->second = ivalue;
                     if (type == value_type::floting) it->second = dvalue;
                     if (type == value_type::string) it->second = svalue;
@@ -150,6 +157,7 @@ int main()
     try
     {
         ini_parser parser("example.ini");
+        // parser.print_data<double>();
         auto value = parser.get_value<double>("Section1.var1");
         cout << "get_value::section1::var1 " << value << endl;
     }
